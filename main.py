@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QApplication,QWidget,QPushButton,QGridLayout,QInputDialog,QTableView,QLCDNumber
 from PyQt5.QtSql import QSqlDatabase,QSqlQuery,QSqlTableModel
-from PyQt5.QtCore import Qt,QTime
+from PyQt5.QtCore import Qt,QTime,QTimer
 import sys
 
 
@@ -19,33 +19,31 @@ class CRUD(QWidget):
         self.lCD_time.setSegmentStyle(QLCDNumber.Flat)
         self.lCD_time.setStyleSheet("QLCDNumber {color: blue;}") 
         self.lCD_time.setMinimumHeight(40) # change the font size to bigger        
-        self.lCD_time.display(text)
-        
+        self.lCD_time.display(text)        
+               
+        # refresh timer to reset time in lCD_time
+        self.refreshTimer = QTimer(self)
+        self.refreshTimer.start(1000) # Starts or restarts the timer with a timeout of duration msec milliseconds.
+        self.refreshTimer.timeout.connect(self.show_Time) # This signal is emitted when the timer times out.       
        
         bt_add = QPushButton("Add")
         bt_del = QPushButton("Delete")
-        bt_sho = QPushButton("Show")
-        bt_sho_time = QPushButton("Show current time")
+        bt_sho = QPushButton("Show")        
         
         layout = QGridLayout()
         layout.addWidget(self.lCD_time)
         layout.addWidget(bt_add)
         layout.addWidget(bt_del)
-        layout.addWidget(bt_sho)
-        layout.addWidget(bt_sho_time)
+        layout.addWidget(bt_sho)        
         
         bt_add.clicked.connect(self.add_records)
         bt_del.clicked.connect(self.del_records)
-        bt_sho.clicked.connect(self.show_records)
-        
-        bt_sho_time.clicked.connect(self.show_Time)        
+        bt_sho.clicked.connect(self.show_records)            
 
         self.tableView = QTableView(self)
         self.tableView.setObjectName("tableView")
         
         layout.addWidget(self.tableView)
-        
-        
         
         self.setLayout(layout)
         self.setWindowTitle("CRUD sample")
@@ -70,8 +68,10 @@ class CRUD(QWidget):
             
             if query.exec_():
                 print("add_records Successful")
+                self.show_records() 
             else:
                 print("add_records Error: ", query.lastError().text())
+                
                 
     def show_records(self):  
 #         createDBConnection()
@@ -92,6 +92,7 @@ class CRUD(QWidget):
         query.exec_("DELETE from employee1")
         if query.exec_():
             print("del_records Successful")
+            self.show_records() 
         else:
             print("del_records Error: ", query.lastError().text())
 
@@ -109,7 +110,7 @@ class CRUD(QWidget):
     
     def show_Time(self):
         time = QTime.currentTime()
-        print(time)
+#         print(time)
         text = time.toString('hh:mm:ss')
         self.lCD_time.display(text)
         
